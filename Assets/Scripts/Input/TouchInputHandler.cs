@@ -22,6 +22,11 @@ public class TouchInputHandler : MonoBehaviour
     public event Action OnMiss;
 
     public enum Judgement {Perfect, Good, Miss}
+
+    private Coroutine missCheckCoroutine;
+    private bool isMissJudged = false;
+    private bool isBeatOpen = false;
+    private bool inputReceived = false;
     
 
     void Awake()
@@ -60,6 +65,29 @@ public class TouchInputHandler : MonoBehaviour
     private void HandleBeat() // 비트 시각
     {
         lastBeatTime = AudioSettings.dspTime;
+        inputReceived = false;
+        isMissJudged = false;
+        isBeatOpen = true;
+
+        if (missCheckCoroutine != null)
+            StopCoroutine(missCheckCoroutine);
+        
+        missCheckCoroutine = StartCoroutine(CheckMiss());
+    }
+
+    private System.Collections.IEnumerator CheckMiss()
+    {
+        // Good 판정 기준 시간만큼 대기
+        yield return new WaitForSeconds((float)GOOD_THRESHOLD);
+
+        // 대기 후에도 탭이 없었으면 Miss
+        if (!inputReceived)
+        {
+            isMissJudged = true;
+            isBeatOpen = false;
+            OnMiss?.Invoke();
+            Debug.Log("[TouchInput] MISS (CheckMiss)");
+        }
     }
 
     private void HandleFingerDown(Finger finger)
@@ -69,6 +97,21 @@ public class TouchInputHandler : MonoBehaviour
 
     public JudgementResult Judge() // 탭 발생 시 외부에서 호출
     {
+        if (!isBeatOpen)
+        {
+            Debug.Log("[TouchInput] 비트 판정 범위 밖");
+            return null;
+        }
+
+        if (isMissJudged)
+        {
+            Debug.Log("[TouchInput] 이미 MISS 처리된 비트");
+            return new JudgementResult(JudgementType.Miss, 0);
+        }
+
+        inputReceived = true;
+        isBeatOpen = false;
+
         double tapTime = AudioSettings.dspTime;
         double diff = Math.Abs(tapTime - lastBeatTime); // 오차 계산
 
@@ -94,7 +137,6 @@ public class TouchInputHandler : MonoBehaviour
         return result;
     }
 
-    // Update is called once per frame
     void Update()
     {
         // 테스트용: 스페이스바

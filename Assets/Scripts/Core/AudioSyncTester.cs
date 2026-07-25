@@ -28,6 +28,8 @@ public class AudioSyncTester : MonoBehaviour
     {
         RhythmManager.Instance.SetBPM(bpm);
 
+        JudgementSystem.Instance.StartStage("minigame_beat");
+
         if (testClip != null)
         {
             audioSource.clip = testClip;
@@ -66,6 +68,14 @@ public class AudioSyncTester : MonoBehaviour
             audioSource.Play();
             RhythmManager.Instance.SetBPM(bpm);
             Debug.Log("[SyncTest] 음원 재시작");
+        }
+
+        if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+        {
+            audioSource.Stop();
+            RhythmManager.Instance.SetBPM(0.001f);
+            JudgementSystem.Instance.EndStage();
+            Debug.Log("[SyncTest] 스테이지 종료 — 음악 및 비트 정지");
         }
     }
 }

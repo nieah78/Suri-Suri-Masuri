@@ -19,6 +19,12 @@ public class JudgementSystem : MonoBehaviour
     public int Combo => combo;
     public int MaxCombo => maxCombo;
 
+    private int perfectCount = 0;
+    private int goodCount = 0;
+    private int missCount = 0;
+    private bool isPenalty = false;   // 페널티 발생 여부
+    private string currentStageId = ""; // 현재 플레이 중인 스테이지
+
     // 판정 결과 이벤트
     public event Action<JudgementType, int, int> OnJudgement;
 
@@ -55,8 +61,16 @@ public class JudgementSystem : MonoBehaviour
         }
     }
 
+    public void StartStage(string stageId)
+    {
+        currentStageId = stageId;
+        ResetScore();
+        Debug.Log($"[JudgementSystem] 스테이지 시작: {stageId}");
+    }
+
     private void HandlePerfect()
     {
+        perfectCount++;
         combo++;
         maxCombo = Mathf.Max(maxCombo, combo);
         score += Mathf.RoundToInt(PERFECT_SCORE * GetMultiplier());
@@ -66,6 +80,7 @@ public class JudgementSystem : MonoBehaviour
 
     private void HandleGood()
     {
+        goodCount++;
         combo++;
         maxCombo = Mathf.Max(maxCombo, combo);
         score += Mathf.RoundToInt(GOOD_SCORE * GetMultiplier());
@@ -75,6 +90,7 @@ public class JudgementSystem : MonoBehaviour
 
     private void HandleMiss()
     {
+        missCount++;
         combo = 0;
         OnJudgement?.Invoke(JudgementType.Miss, score, combo);
         Debug.Log($"[Judgement] MISS | 점수: {score} | 콤보: {combo}");
@@ -87,10 +103,27 @@ public class JudgementSystem : MonoBehaviour
         else return 1.0f;
     }
 
-    public void ResetScroe()
+    public void ResetScore()
     {
         score = 0;
         combo = 0;
         maxCombo = 0;
+        perfectCount = 0;
+        goodCount = 0;
+        missCount = 0;
+        isPenalty = false;
+    }
+
+    public void EndStage()
+    {
+        string rank = RankCalculator.Calculate(perfectCount, goodCount, missCount, isPenalty);
+        int coinReward = RankCalculator.GetCoinReward(rank);
+
+        DataManager.Instance.UpdateStageRecord(currentStageId, score, maxCombo, rank);
+
+        DataManager.Instance.AddCoins(coinReward);
+
+        Debug.Log($"[JudgementSystem] 스테이지 종료 | 랭크: {rank} | 주화: +{coinReward}");
+        Debug.Log($"Perfect: {perfectCount} | Good: {goodCount} | Miss: {missCount}");
     }
 }

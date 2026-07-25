@@ -56,6 +56,7 @@
     <Compile Include="Assets\TutorialInfo\Scripts\Readme.cs" />
     <Compile Include="Assets\Scripts\Input\NewEmptyCSharpScript.cs" />
     <Compile Include="Assets\Scripts\UI\JudgementUI.cs" />
+    <Compile Include="Assets\Scripts\Core\RankCalculator.cs" />
     <Compile Include="Assets\Scripts\Input\TouchInputHandler.cs" />
     <Compile Include="Assets\Scripts\Core\JudgementSystem.cs" />
   </ItemGroup>

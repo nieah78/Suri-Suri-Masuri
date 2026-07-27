@@ -123,6 +123,8 @@ public class JudgementSystem : MonoBehaviour
 
         DataManager.Instance.AddCoins(coinReward);
 
+        FirebaseManager.Instance.SyncToCloud();
+
         Debug.Log($"[JudgementSystem] 스테이지 종료 | 랭크: {rank} | 주화: +{coinReward}");
         Debug.Log($"Perfect: {perfectCount} | Good: {goodCount} | Miss: {missCount}");
     }
